@@ -10,6 +10,7 @@ import { Login } from '@/pages/Login'
 import { Register } from '@/pages/Login/Register'
 import { About } from '@/pages/About'
 import { Profile } from '@/pages/Profile'
+import { OrderDetail } from '@/pages/OrderDetail'
 import { Wishlist } from '@/pages/Wishlist'
 import { AdminDashboard } from '@/pages/AdminDashboard'
 import { NotFound } from '@/pages/NotFound'
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/order/:orderId" element={<OrderDetail />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/admin" element={
               isAuthenticated && user?.is_admin ? <AdminDashboard /> : <NotFound />

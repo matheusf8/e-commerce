@@ -213,6 +213,15 @@ export function AdminDashboard() {
           {order.payment_status}
         </span>
       </td>
+      <td className="py-3 text-xs">
+        {order.payment_method === 'credit_card' ? 'Cartão Crédito' :
+         order.payment_method === 'debit_card' ? 'Cartão Débito' :
+         order.payment_method === 'mercadopago' ? 'Mercado Pago' :
+         order.payment_method === 'pix' ? 'Pix' : (order.payment_method || 'N/A')}
+      </td>
+      <td className="py-3 text-xs text-gray-500">
+        {order.created_at ? new Date(order.created_at).toLocaleDateString('pt-BR') : '-'}
+      </td>
       {showActions && (
         <td className="py-3">
           <button onClick={() => viewOrderDetail(order.id)} className="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-medium">Detalhes</button>
@@ -327,12 +336,13 @@ export function AdminDashboard() {
                       <th className="pb-3 font-semibold">Total</th>
                       <th className="pb-3 font-semibold">Status</th>
                       <th className="pb-3 font-semibold">Pagamento</th>
+                      <th className="pb-3 font-semibold">Metodo</th>
                       <th className="pb-3 font-semibold">Data</th>
                     </tr>
                   </thead>
                   <tbody>
                     {orders.slice(0, 5).map((order) => renderOrderRow(order, false))}
-                    {orders.length === 0 && <tr><td colSpan={6} className="py-8 text-center text-gray-500">Nenhum pedido encontrado</td></tr>}
+                    {orders.length === 0 && <tr><td colSpan={7} className="py-8 text-center text-gray-500">Nenhum pedido encontrado</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -479,12 +489,13 @@ export function AdminDashboard() {
                       <th className="pb-3 font-semibold">Status</th>
                       <th className="pb-3 font-semibold">Pagamento</th>
                       <th className="pb-3 font-semibold">Metodo</th>
+                      <th className="pb-3 font-semibold">Data</th>
                       <th className="pb-3 font-semibold">Acoes</th>
                     </tr>
                   </thead>
                   <tbody>
                     {orders.map((order) => renderOrderRow(order, true))}
-                    {orders.length === 0 && <tr><td colSpan={7} className="py-8 text-center text-gray-500">Nenhum pedido</td></tr>}
+                    {orders.length === 0 && <tr><td colSpan={8} className="py-8 text-center text-gray-500">Nenhum pedido</td></tr>}
                   </tbody>
                 </table>
               </div>
