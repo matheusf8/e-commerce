@@ -265,7 +265,6 @@ Matheus Franco - [@matheusf8](https://github.com/matheusf8)
 ## 📞 Contato
 
 - Email: matheuslobofranco@gmail.com
-- Telefone: +55 (62) 99880-4480
 - GitHub: [@matheusf8](https://github.com/matheusf8)
 
 ## 🙏 Agradecimentos
