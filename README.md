@@ -7,9 +7,10 @@ Um projeto de e-commerce completo, moderno e profissional desenvolvido com **Pyt
 - ✅ **Autenticação JWT** com registro, login e refresh token
 - ✅ **Catálogo de Produtos** com filtros, busca e paginação
 - ✅ **Carrinho de Compras** persistente
-- ✅ **Checkout** com validação multi-step
-- ✅ **Dashboard Admin** para gerenciar produtos
-- ✅ **Sistema de Avaliações** de produtos
+- ✅ **Checkout** com validação multi-step e 4 métodos de pagamento (Pix, cartão de crédito/débito simulados, e **Mercado Pago real via Checkout Pro**)
+- ✅ **Wishlist** e **Avaliações** de produtos
+- ✅ **Dashboard Admin** completo (produtos, categorias, pedidos, status)
+- ✅ **Testes automatizados**: 17 testes de API (Pytest) + suíte E2E completa em navegador real (Playwright)
 - ✅ **Responsivo** mobile-first
 - ✅ **Design Premium** com Tailwind CSS
 - ✅ **Type-Safe** com TypeScript e Python type hints
@@ -136,18 +137,22 @@ projeto/
 │   │   ├── styles/        # Tailwind CSS
 │   │   ├── App.tsx
 │   │   └── main.tsx
+│   ├── e2e/                # Testes E2E (Playwright)
 │   ├── tests/
 │   ├── package.json
+│   ├── playwright.config.ts
 │   ├── tailwind.config.js
 │   ├── vite.config.ts
 │   └── .env.example
 ├── docs/
-│   ├── API.md             # Documentação da API
-│   ├── SETUP.md           # Setup detalhado
-│   └── ARCHITECTURE.md    # Arquitetura
+│   ├── API.md                        # Documentação da API
+│   ├── SETUP.md                      # Setup detalhado
+│   ├── ARCHITECTURE.md               # Arquitetura
+│   └── PAGAMENTO_MERCADO_PAGO.md      # Como configurar o Mercado Pago (sandbox)
 ├── docker-compose.yml
 ├── .env.example
 ├── .gitignore
+├── CLAUDE.md
 └── README.md
 \`\`\`
 
@@ -176,16 +181,24 @@ projeto/
 
 ## 🧪 Testes
 
-### Backend
+### Backend (Pytest)
 \`\`\`bash
 cd backend
 pytest tests/ -v --cov
 \`\`\`
 
-### Frontend
+### Frontend — unitário (Vitest)
 \`\`\`bash
 cd frontend
 npm test
+\`\`\`
+
+### Frontend — E2E em navegador real (Playwright)
+Com o backend (`python main.py`) e o frontend (`npm run dev`) já rodando:
+\`\`\`bash
+cd frontend
+npm run test:e2e       # roda a suíte completa (jornada cliente + admin) num Chromium real
+npm run test:e2e:ui     # mesma suíte, com interface interativa
 \`\`\`
 
 ## 📊 Scripts Úteis
@@ -198,11 +211,8 @@ python main.py
 # Rodar com reload
 uvicorn main:app --reload
 
-# Criar usuário admin
-python scripts/create_admin.py
-
-# Popular banco com dados de teste
-python scripts/seed_db.py
+# Popular banco com dados de teste + usuário admin (admin@example.com / admin123)
+python seed_db.py
 \`\`\`
 
 ### Frontend
@@ -248,6 +258,7 @@ npm run type-check
 - [API Documentation](./docs/API.md)
 - [Setup Avançado](./docs/SETUP.md)
 - [Arquitetura](./docs/ARCHITECTURE.md)
+- [Pagamento com Mercado Pago (sandbox)](./docs/PAGAMENTO_MERCADO_PAGO.md)
 
 ## 🤝 Contributing
 
