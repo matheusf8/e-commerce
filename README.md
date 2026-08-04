@@ -26,7 +26,7 @@ Um projeto de e-commerce completo, moderno e profissional desenvolvido com **Pyt
 ### 1. Clonar o repositório
 
 \`\`\`bash
-git clone https://github.com/seu-usuario/sistema-de-E-commerce.git
+git clone https://github.com/matheusf8/e-commerce.git
 cd sistema-de-E-commerce
 \`\`\`
 
@@ -260,12 +260,13 @@ Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICEN
 
 ## 👨‍💻 Autor
 
-Seu Nome - [@seu-twitter](https://twitter.com/seu-twitter)
+Matheus Franco - [@matheusf8](https://github.com/matheusf8)
 
 ## 📞 Contato
 
-- Email: seu-email@example.com
-- GitHub: [@seu-usuario](https://github.com/seu-usuario)
+- Email: matheuslobofranco@gmail.com
+- Telefone: +55 (62) 99880-4480
+- GitHub: [@matheusf8](https://github.com/matheusf8)
 
 ## 🙏 Agradecimentos
 
