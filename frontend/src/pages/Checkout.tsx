@@ -168,12 +168,22 @@ export function Checkout() {
 
       const response = await api.post('/orders', payload)
       const orderData = response.data
-      
+
       localStorage.setItem('lastOrder', JSON.stringify(orderData))
-      
+
       // Clear saved checkout form after successful order
       localStorage.removeItem(STORAGE_KEY)
-      
+
+      // Mercado Pago: order was created as "pending", now create the Checkout Pro
+      // preference and redirect to their hosted payment page. The order only gets
+      // marked as paid later, when we come back and call /mp-sync.
+      if (formData.paymentMethod === 'mercadopago') {
+        const prefRes = await api.post(`/orders/${orderData.id}/mp-preference`)
+        const { init_point, sandbox_init_point } = prefRes.data
+        window.location.href = sandbox_init_point || init_point
+        return
+      }
+
       // Save the order for retry purposes
       if (orderData.pending_orders) {
         localStorage.setItem('pendingOrders', JSON.stringify(orderData.pending_orders))
@@ -316,6 +326,16 @@ export function Checkout() {
                       <div className="ml-3">
                         <span className="font-semibold text-lg">Pix</span>
                         <p className="text-sm text-gray-500">Pagamento instantaneo - ganhe 5% de desconto</p>
+                      </div>
+                    </label>
+                    <label className={"flex items-center p-5 border-2 rounded-xl cursor-pointer transition-all hover:bg-cyan-50 " +
+                      (formData.paymentMethod === 'mercadopago' ? 'border-cyan-500 bg-cyan-50' : 'border-gray-200')}>
+                      <input type="radio" name="paymentMethod" value="mercadopago"
+                        checked={formData.paymentMethod === 'mercadopago'} onChange={handleChange} className="w-5 h-5" />
+                      <CreditCardIcon size={24} className="ml-4 text-cyan-600" />
+                      <div className="ml-3">
+                        <span className="font-semibold text-lg">Mercado Pago</span>
+                        <p className="text-sm text-gray-500">Pagamento real via Mercado Pago (ambiente de teste/sandbox)</p>
                       </div>
                     </label>
 

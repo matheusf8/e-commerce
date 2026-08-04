@@ -1,21 +1,54 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { CheckCircle } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { CheckCircle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { api } from '@/services/api'
 
 export function OrderConfirmation() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [orderData, setOrderData] = useState<any>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
 
   useEffect(() => {
+    const orderId = searchParams.get('order_id')
+    const paymentId = searchParams.get('payment_id')
+
+    // Came back from the Mercado Pago redirect: confirm the real payment status
+    // with our backend (which re-checks it against Mercado Pago's API) instead of
+    // trusting the query params the browser brings back.
+    if (orderId && paymentId) {
+      setIsSyncing(true)
+      api.post(`/orders/${orderId}/mp-sync`, { payment_id: paymentId })
+        .then((res) => {
+          setOrderData(res.data)
+          localStorage.setItem('lastOrder', JSON.stringify(res.data))
+        })
+        .catch((err) => {
+          console.error('Failed to sync Mercado Pago payment:', err)
+          navigate(`/checkout?retry=${orderId}`)
+        })
+        .finally(() => setIsSyncing(false))
+      return
+    }
+
     const data = localStorage.getItem('lastOrder')
     if (data) {
       setOrderData(JSON.parse(data))
     } else {
       navigate('/catalog')
     }
-  }, [navigate])
+  }, [navigate, searchParams])
+
+  if (isSyncing) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+        <Loader2 className="w-10 h-10 text-blue-600 mx-auto mb-4 animate-spin" />
+        <p className="text-gray-600">Confirmando pagamento com o Mercado Pago...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

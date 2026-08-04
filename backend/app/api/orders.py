@@ -90,3 +90,29 @@ async def retry_payment(
 ):
     """Retry payment for a failed order"""
     return OrderService.retry_payment(db, order_id, current_user)
+
+
+@router.post("/{order_id}/mp-preference")
+async def create_mp_preference(
+    order_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Create a Mercado Pago Checkout Pro preference and return its payment URL"""
+    return OrderService.create_mp_preference(db, order_id, current_user)
+
+
+class MpSyncRequest(BaseModel):
+    """Body for syncing a Mercado Pago payment status"""
+    payment_id: str
+
+
+@router.post("/{order_id}/mp-sync")
+async def sync_mp_payment(
+    order_id: str,
+    sync_data: MpSyncRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Confirm the real payment status with Mercado Pago's API and update the order"""
+    return OrderService.sync_mp_payment(db, order_id, current_user, sync_data.payment_id)

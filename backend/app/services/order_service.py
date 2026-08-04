@@ -1,9 +1,11 @@
 """Order service"""
 import random
+import mercadopago
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.models import Order, OrderItem, CartItem, Product, User
 from app.schemas import OrderCreate
+from app.config import settings
 import uuid
 
 
@@ -130,17 +132,28 @@ class OrderService:
         shipping_cost = 10.0 if subtotal > 100 else 15.0  # Free shipping over $100
         total = subtotal + tax + shipping_cost
 
-        # Process payment simulation
-        card_data = {}
-        if order_data.card_number:
-            card_data["card_number"] = order_data.card_number
-        if order_data.card_name:
-            card_data["card_name"] = order_data.card_name
+        # Process payment: "mercadopago" is a real gateway (Checkout Pro) that needs the
+        # order to exist first (the preference references order.id), so it stays pending
+        # here and is settled later by create_mp_preference/sync_mp_payment. Every other
+        # method keeps using the simulator.
+        if order_data.payment_method == "mercadopago":
+            payment_result = {
+                "status": "pending",
+                "message": "Aguardando pagamento via Mercado Pago",
+                "transaction_id": None,
+                "payment_status": "pending",
+            }
+        else:
+            card_data = {}
+            if order_data.card_number:
+                card_data["card_number"] = order_data.card_number
+            if order_data.card_name:
+                card_data["card_name"] = order_data.card_name
 
-        payment_result = PaymentSimulator.process_payment(
-            order_data.payment_method,
-            card_data
-        )
+            payment_result = PaymentSimulator.process_payment(
+                order_data.payment_method,
+                card_data
+            )
 
         # Determine order status based on payment
         order_status = "processing" if payment_result["payment_status"] == "completed" else "pending"
@@ -243,6 +256,113 @@ class OrderService:
         result["payment_approved"] = payment_result["payment_status"] == "completed"
 
         return result
+
+    @staticmethod
+    def create_mp_preference(db: Session, order_id: str, user: User) -> dict:
+        """Create a Mercado Pago Checkout Pro preference for an existing order.
+
+        Checkout Pro is Mercado Pago's hosted payment page: we never touch card
+        data ourselves, we just send the order items and get back a URL to redirect to.
+        """
+        order = db.query(Order).filter(
+            Order.id == order_id,
+            Order.user_id == user.id
+        ).first()
+
+        if not order:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+
+        if not settings.mp_access_token:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Mercado Pago não está configurado (defina MP_ACCESS_TOKEN no .env)"
+            )
+
+        sdk = mercadopago.SDK(settings.mp_access_token)
+
+        items = [
+            {
+                "title": item.product.name if item.product else "Produto",
+                "quantity": item.quantity,
+                "unit_price": item.price,
+                "currency_id": "BRL",
+            }
+            for item in order.items
+        ]
+
+        preference_data = {
+            "items": items,
+            "external_reference": order.id,
+            "back_urls": {
+                "success": f"{settings.frontend_url}/order-confirmation?order_id={order.id}",
+                "pending": f"{settings.frontend_url}/order-confirmation?order_id={order.id}",
+                "failure": f"{settings.frontend_url}/checkout?retry={order.id}&mp_status=failure",
+            },
+            "auto_return": "approved",
+        }
+
+        result = sdk.preference().create(preference_data)
+        if result.get("status") not in (200, 201):
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Falha ao criar preferência no Mercado Pago: {result.get('response')}"
+            )
+
+        preference = result["response"]
+        order.transaction_id = preference.get("id")
+        db.commit()
+
+        return {
+            "preference_id": preference.get("id"),
+            "init_point": preference.get("init_point"),
+            "sandbox_init_point": preference.get("sandbox_init_point"),
+        }
+
+    @staticmethod
+    def sync_mp_payment(db: Session, order_id: str, user: User, payment_id: str) -> dict:
+        """Fetch the definitive payment status straight from Mercado Pago's API and
+        update the order accordingly. Never trust the status query params the browser
+        brings back from the redirect — those are only a hint to fetch the real thing."""
+        order = OrderService.get_order(db, order_id, user)
+
+        if not settings.mp_access_token:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Mercado Pago não está configurado (defina MP_ACCESS_TOKEN no .env)"
+            )
+
+        sdk = mercadopago.SDK(settings.mp_access_token)
+        result = sdk.payment().get(payment_id)
+        if result.get("status") != 200:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Não foi possível confirmar o pagamento no Mercado Pago"
+            )
+
+        payment = result["response"]
+        mp_status = payment.get("status")  # approved, pending, in_process, rejected, cancelled
+
+        status_map = {
+            "approved": "completed",
+            "pending": "pending",
+            "in_process": "pending",
+            "rejected": "failed",
+            "cancelled": "failed",
+        }
+        order.payment_status = status_map.get(mp_status, "pending")
+        order.transaction_id = str(payment.get("id"))
+        order.payment_message = f"Mercado Pago: {mp_status} ({payment.get('status_detail', '')})".strip()
+
+        if order.payment_status == "completed":
+            order.status = "processing"
+
+        db.commit()
+        db.refresh(order)
+
+        result_dict = OrderService._order_to_dict(order)
+        result_dict["payment_message"] = order.payment_message
+        result_dict["payment_approved"] = order.payment_status == "completed"
+        return result_dict
 
     @staticmethod
     def get_order(db: Session, order_id: str, user: User) -> Order:

@@ -17,7 +17,13 @@ class Settings(BaseSettings):
     
     # CORS
     allowed_origins: str = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173,http://localhost:5174")
-    
+
+    # Frontend (used to build Mercado Pago back_urls)
+    frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    # Mercado Pago (sandbox/test credentials only — never commit a real APP_USR- token)
+    mp_access_token: str = os.getenv("MP_ACCESS_TOKEN", "")
+
     # Environment
     environment: str = os.getenv("ENVIRONMENT", "development")
     debug: bool = True
