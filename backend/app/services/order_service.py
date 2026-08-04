@@ -298,8 +298,14 @@ class OrderService:
                 "pending": f"{settings.frontend_url}/order-confirmation?order_id={order.id}",
                 "failure": f"{settings.frontend_url}/checkout?retry={order.id}&mp_status=failure",
             },
-            "auto_return": "approved",
         }
+        # auto_return requires back_urls.success to be HTTPS — the Mercado Pago API
+        # rejects it outright over plain http (as localhost is in dev). Without it,
+        # the user just clicks "Voltar ao site" on Mercado Pago's own success page,
+        # which works fine locally; production (with a real https domain) can add
+        # "auto_return": "approved" back for a fully automatic redirect.
+        if settings.frontend_url.startswith("https://"):
+            preference_data["auto_return"] = "approved"
 
         result = sdk.preference().create(preference_data)
         if result.get("status") not in (200, 201):
