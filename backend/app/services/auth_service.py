@@ -1,0 +1,110 @@
+"""Authentication service"""
+from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
+from app.models import User
+from app.schemas import UserCreate, UserLogin, TokenResponse
+from app.auth.jwt import JWTHandler, PasswordHandler
+from datetime import timedelta
+
+class AuthService:
+    """Service for authentication operations"""
+
+    @staticmethod
+    def register(db: Session, user_data: UserCreate) -> User:
+        """Register a new user"""
+        # Check if email already exists
+        existing_user = db.query(User).filter(User.email == user_data.email).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+        
+        # Create new user
+        user = User(
+            email=user_data.email,
+            full_name=user_data.full_name,
+            password_hash=PasswordHandler.hash_password(user_data.password),
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
+
+    @staticmethod
+    def login(db: Session, login_data: UserLogin) -> tuple[User, TokenResponse]:
+        """Authenticate user and return tokens"""
+        # Find user by email
+        user = db.query(User).filter(User.email == login_data.email).first()
+        if not user or not PasswordHandler.verify_password(login_data.password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+        
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User account is inactive"
+            )
+        
+        # Generate tokens
+        access_token = JWTHandler.create_access_token(data={"sub": user.id})
+        refresh_token = JWTHandler.create_refresh_token(data={"sub": user.id})
+        
+        token_response = TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token
+        )
+        
+        return user, token_response
+
+    @staticmethod
+    def refresh_token(token: str) -> TokenResponse:
+        """Refresh access token using refresh token"""
+        user_id = JWTHandler.verify_token(token)
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired refresh token"
+            )
+        
+        access_token = JWTHandler.create_access_token(data={"sub": user_id})
+        return TokenResponse(access_token=access_token)
+
+    @staticmethod
+    def get_profile(user: User):
+        """Get user profile"""
+        return {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "is_admin": user.is_admin,
+            "total_orders": user.total_orders,
+            "total_spent": user.total_spent,
+            "created_at": user.created_at,
+        }
+
+    @staticmethod
+    def update_profile(db: Session, user: User, update_data: dict) -> User:
+        """Update user profile"""
+        for field, value in update_data.items():
+            if value is not None:
+                setattr(user, field, value)
+        
+        db.commit()
+        db.refresh(user)
+        return user
+
+    @staticmethod
+    def change_password(db: Session, user: User, current_password: str, new_password: str) -> dict:
+        """Change user password"""
+        from app.auth.jwt import PasswordHandler
+        if not PasswordHandler.verify_password(current_password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is incorrect"
+            )
+        user.password_hash = PasswordHandler.hash_password(new_password)
+        db.commit()
+        return {"message": "Password changed successfully"}

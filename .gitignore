@@ -1,0 +1,71 @@
+# Ignore environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+venv/
+ENV/
+env/
+.venv
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+dist/
+.next/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.nyc_output/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+migrations/
+
+# Logs
+logs/
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Build
+build/
+dist/
