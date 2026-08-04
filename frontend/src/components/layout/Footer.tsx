@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 export function Footer() {
   return (
     <footer className="bg-gray-900 text-white">
@@ -15,10 +17,10 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Navegação</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="/" className="hover:text-white transition">Início</a></li>
-              <li><a href="/catalog" className="hover:text-white transition">Catálogo</a></li>
-              <li><a href="/about" className="hover:text-white transition">Sobre</a></li>
-              <li><a href="/contact" className="hover:text-white transition">Contato</a></li>
+              <li><Link to="/" className="hover:text-white transition">Início</Link></li>
+              <li><Link to="/catalog" className="hover:text-white transition">Catálogo</Link></li>
+              <li><Link to="/about" className="hover:text-white transition">Sobre</Link></li>
+              <li><Link to="/contact" className="hover:text-white transition">Contato</Link></li>
             </ul>
           </div>
 
@@ -26,9 +28,9 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="/privacy" className="hover:text-white transition">Privacidade</a></li>
-              <li><a href="/terms" className="hover:text-white transition">Termos</a></li>
-              <li><a href="/cookies" className="hover:text-white transition">Cookies</a></li>
+              <li><Link to="/privacy" className="hover:text-white transition">Privacidade</Link></li>
+              <li><Link to="/terms" className="hover:text-white transition">Termos</Link></li>
+              <li><Link to="/cookies" className="hover:text-white transition">Cookies</Link></li>
             </ul>
           </div>
 

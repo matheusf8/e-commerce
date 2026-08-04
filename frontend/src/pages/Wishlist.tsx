@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { useAuthStore } from '@/store'
 import { api } from '@/services/api'
+import toast from 'react-hot-toast'
 
 export function Wishlist() {
   const { isAuthenticated } = useAuthStore()
@@ -39,9 +40,10 @@ export function Wishlist() {
   const moveToCart = async (productId: string) => {
     try {
       await api.post('/cart/items', { product_id: productId, quantity: 1 })
-      alert('Produto adicionado ao carrinho!')
+      toast.success('Produto adicionado ao carrinho!')
     } catch (err) {
       console.error('Failed to add to cart:', err)
+      toast.error('Erro ao adicionar ao carrinho')
     }
   }
 

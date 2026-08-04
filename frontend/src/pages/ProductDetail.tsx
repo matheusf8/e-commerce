@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { productService, reviewService } from '@/services/api'
 import { useAuthStore, useCartStore } from '@/store'
 import { api } from '@/services/api'
+import toast from 'react-hot-toast'
 
 export function ProductDetail() {
   const { productId } = useParams()
@@ -17,6 +18,9 @@ export function ProductDetail() {
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [reviews, setReviews] = useState<any[]>([])
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' })
+  const [submittingReview, setSubmittingReview] = useState(false)
   const addItemToCart = useCartStore(state => state.addItemToCart)
 
   useEffect(() => {
@@ -84,6 +88,24 @@ export function ProductDetail() {
       }
     } catch (err) {
       console.error('Wishlist error:', err)
+    }
+  }
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!productId) return
+    setSubmittingReview(true)
+    try {
+      await reviewService.create(productId, reviewForm)
+      toast.success('Avaliação enviada, obrigado!')
+      setReviewForm({ rating: 5, title: '', comment: '' })
+      setShowReviewForm(false)
+      const revRes = await reviewService.getByProduct(productId)
+      setReviews(revRes.data.items || revRes.data || [])
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Erro ao enviar avaliação')
+    } finally {
+      setSubmittingReview(false)
     }
   }
 
@@ -211,6 +233,7 @@ export function ProductDetail() {
                 </Button>
                 <Button variant="outline" className={"py-4 px-6 " + (isWishlisted ? "text-red-500 border-red-300" : "")}
                   onClick={handleWishlist}
+                  aria-label={isWishlisted ? "Remover dos favoritos" : "Adicionar aos favoritos"}
                 >
                   <Heart size={24} className={isWishlisted ? "fill-red-500 text-red-500" : ""} />
                 </Button>
@@ -246,7 +269,65 @@ export function ProductDetail() {
 
       {/* Reviews Section */}
       <div className="mt-16">
-        <h2 className="text-2xl font-bold text-gray-900 mb-8">Avaliacoes dos Clientes</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">Avaliacoes dos Clientes</h2>
+          {isAuthenticated && !showReviewForm && (
+            <Button variant="outline" onClick={() => setShowReviewForm(true)}>
+              Avaliar Produto
+            </Button>
+          )}
+        </div>
+
+        {showReviewForm && (
+          <Card className="p-6 mb-8">
+            <form onSubmit={handleSubmitReview} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Nota</label>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setReviewForm({ ...reviewForm, rating: n })}
+                      aria-label={`${n} estrelas`}
+                    >
+                      <Star
+                        size={28}
+                        className={n <= reviewForm.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Título</label>
+                <input
+                  type="text"
+                  required
+                  minLength={3}
+                  value={reviewForm.title}
+                  onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
+                  placeholder="Resuma sua experiência"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Comentário (opcional)</label>
+                <textarea
+                  value={reviewForm.comment}
+                  onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button type="submit" isLoading={submittingReview}>Enviar Avaliação</Button>
+                <Button type="button" variant="outline" onClick={() => setShowReviewForm(false)}>Cancelar</Button>
+              </div>
+            </form>
+          </Card>
+        )}
+
         {reviews.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-2xl">
             <Star size={48} className="mx-auto text-gray-300 mb-4" />
@@ -270,7 +351,8 @@ export function ProductDetail() {
                         <div className="flex">{renderStars(review.rating || 5, 14)}</div>
                       </div>
                     </div>
-                    <p className="text-gray-700 mt-2">{review.comment || "Otimo produto!"}</p>
+                    {review.title && <p className="font-semibold text-gray-900 mt-2">{review.title}</p>}
+                    <p className="text-gray-700 mt-1">{review.comment || "Otimo produto!"}</p>
                   </div>
                   <span className="text-sm text-gray-400">
                     {new Date(review.created_at).toLocaleDateString("pt-BR")}

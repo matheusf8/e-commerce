@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useAuthStore } from '@/store'
@@ -74,9 +74,9 @@ export function Login() {
 
         <p className="text-center text-gray-600 mt-4">
           Não tem conta?{' '}
-          <a href="/register" className="text-blue-600 hover:underline">
+          <Link to="/register" className="text-blue-600 hover:underline">
             Registrar
-          </a>
+          </Link>
         </p>
       </div>
     </div>

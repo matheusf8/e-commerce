@@ -131,7 +131,9 @@ export function AdminDashboard() {
       await api.delete('/products/' + productId)
       toast.success('Produto excluido com sucesso!')
       loadData()
-    } catch (err: any) {}
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Erro ao excluir produto')
+    }
   }
 
   const handleAddCategory = async (e: React.FormEvent) => {
@@ -152,7 +154,9 @@ export function AdminDashboard() {
       await api.put('/categories/' + catId, { is_active: !currentStatus })
       toast.success('Categoria atualizada')
       loadData()
-    } catch (err: any) {}
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Erro ao atualizar categoria')
+    }
   }
 
   const getStatusColor = (status: string) => {

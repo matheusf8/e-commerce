@@ -9,6 +9,10 @@ import { OrderConfirmation } from '@/pages/OrderConfirmation'
 import { Login } from '@/pages/Login'
 import { Register } from '@/pages/Login/Register'
 import { About } from '@/pages/About'
+import { Contact } from '@/pages/Contact'
+import { Privacy } from '@/pages/Privacy'
+import { Terms } from '@/pages/Terms'
+import { Cookies } from '@/pages/Cookies'
 import { Profile } from '@/pages/Profile'
 import { OrderDetail } from '@/pages/OrderDetail'
 import { Wishlist } from '@/pages/Wishlist'
@@ -42,6 +46,10 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/cookies" element={<Cookies />} />
             <Route path="/product/:productId" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
