@@ -248,6 +248,7 @@ export function AdminDashboard() {
               <p className="text-xs text-gray-500 mb-1">Total</p>
               <p className="text-xl font-bold text-green-600">R$ {selectedOrder.total?.toFixed(2)}</p>
             </div>
+          </div>
           <div className="border-t pt-4 mb-6">
             <h4 className="font-semibold mb-3"><MapPin size={16} className="inline mr-1" /> Endereco de Entrega</h4>
             <p className="text-sm">{selectedOrder.shipping_address}</p>

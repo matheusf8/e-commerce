@@ -12,7 +12,7 @@ interface ProductCardProps {
   onAddToWishlist?: (id: string) => void
 }
 
-export function ProductCard({ product, onAddToCart, onAddToWishlist }: ProductCardProps) {
+export function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const [imageError, setImageError] = React.useState(false)
   const [isWishlisted, setIsWishlisted] = React.useState(false)
   const [addedToCart, setAddedToCart] = React.useState(false)

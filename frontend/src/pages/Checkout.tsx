@@ -10,6 +10,18 @@ import { CreditCard as CreditCardIcon, Smartphone, Banknote, Check, Copy, X, Ale
 
 const STORAGE_KEY = 'checkout_form_data'
 
+interface CheckoutFormData {
+  shippingAddress: string
+  city: string
+  state: string
+  zipCode: string
+  paymentMethod: string
+  cardNumber: string
+  cardName: string
+  cardExpiry: string
+  cardCvv: string
+}
+
 export function Checkout() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -23,12 +35,12 @@ export function Checkout() {
   const [paymentResult, setPaymentResult] = useState<any>(null) // {approved: boolean, message: string}
   const [isRetrying, setIsRetrying] = useState(false)
 
-  const [formData, setFormData] = useState(() => {
+  const [formData, setFormData] = useState<CheckoutFormData>(() => {
     // Load saved form data from localStorage
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
       try {
-        return JSON.parse(saved)
+        return JSON.parse(saved) as CheckoutFormData
       } catch {
         // ignore
       }

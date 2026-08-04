@@ -1,6 +1,6 @@
 import { Menu, X, ShoppingCart, User, LogOut, Zap, Heart, Shield } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { useCartStore } from '@/store'
 
@@ -15,7 +15,6 @@ export function Header({ cartItemCount = 0, isAuthenticated = false, isAdmin = f
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const storeItemCount = useCartStore(state => state.itemCount)
   const itemCount = isAuthenticated ? storeItemCount : cartItemCount
-  const navigate = useNavigate()
 
   const handleLogout = () => {
     if (onLogout) {

@@ -118,7 +118,7 @@ def init_db():
         db.commit()
 
     db.close()
-    print("✅ Database initialized successfully!")
+    print("Database initialized successfully!")
 
 if __name__ == "__main__":
     init_db()

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { User, Package, Heart, Settings, LogOut, ShoppingBag, ChevronRight, Star, Edit2, Save, X, Eye, Lock } from 'lucide-react'
+import { User, Package, Heart, LogOut, ShoppingBag, Edit2, Save, X, Eye, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'

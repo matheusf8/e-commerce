@@ -42,13 +42,19 @@ def seed_test_db():
     """
     Session-wide fixture to create, seed, and tear down the test database.
     `autouse=True` makes it run automatically for the session.
+
+    Always resets the schema first so re-running the suite is idempotent:
+    tests mutate data (e.g. decrement product stock when placing orders), so
+    reusing a `test.db` left over from a previous run would make stock-dependent
+    tests fail spuriously on the second run.
     """
     # --- Setup ---
-    # Create the test database and tables
+    # Drop and recreate all tables so each test session starts from a clean slate
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    
+
     db = TestingSessionLocal()
-    
+
     # Check if products already exist
     if db.query(Product).count() == 0:
         print("Seeding test database with products...")
