@@ -19,9 +19,15 @@ from app.models import Base
 from app.db.database import engine
 from app.api import api_router
 from app.middleware import error_handler_middleware, validation_error_handler
+from app.config import settings
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+# Dev convenience only: create any missing tables straight from the models.
+# It never alters existing tables (won't add a column a migration forgot),
+# so it's harmless to leave on, but real environments (anything with a
+# client's actual data) should be schema-managed by Alembic instead —
+# `alembic upgrade head` (see backend/alembic/), run once at deploy time.
+if settings.environment == "development":
+    Base.metadata.create_all(bind=engine)
 
 # Initialize FastAPI app
 app = FastAPI(

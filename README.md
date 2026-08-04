@@ -4,12 +4,14 @@ Um projeto de e-commerce completo, moderno e profissional desenvolvido com **Pyt
 
 ## 🚀 Features
 
-- ✅ **Autenticação JWT** com registro, login e refresh token
-- ✅ **Catálogo de Produtos** com filtros, busca e paginação
+- ✅ **Autenticação JWT** com registro, login, refresh token e **redefinição de senha por email**
+- ✅ **Emails transacionais** (boas-vindas, confirmação de pedido, redefinir senha) via Resend
+- ✅ **Catálogo de Produtos** com filtros, busca, paginação e **upload de imagem** (Cloudinary)
 - ✅ **Carrinho de Compras** persistente
-- ✅ **Checkout** com validação multi-step e 4 métodos de pagamento (Pix, cartão de crédito/débito simulados, e **Mercado Pago real via Checkout Pro**)
+- ✅ **Checkout** com validação multi-step e 4 métodos de pagamento (Pix, cartão de crédito/débito simulados, e **Mercado Pago real via Checkout Pro + webhook**)
 - ✅ **Wishlist** e **Avaliações** de produtos
 - ✅ **Dashboard Admin** completo (produtos, categorias, pedidos, status)
+- ✅ **Migrações de banco** com Alembic
 - ✅ **Testes automatizados**: 17 testes de API (Pytest) + suíte E2E completa em navegador real (Playwright)
 - ✅ **Responsivo** mobile-first
 - ✅ **Design Premium** com Tailwind CSS

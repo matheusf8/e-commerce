@@ -34,7 +34,9 @@ export function AdminDashboard() {
     category: '',
     brand: '',
     is_featured: false,
+    image_url: '',
   })
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -76,10 +78,29 @@ export function AdminDashboard() {
       await api.post('/products', newProduct)
       toast.success('Produto cadastrado com sucesso!')
       setShowAddForm(false)
-      setNewProduct({ name: '', sku: '', description: '', price: 0, original_price: 0, stock: 1, category: '', brand: '', is_featured: false })
+      setNewProduct({ name: '', sku: '', description: '', price: 0, original_price: 0, stock: 1, category: '', brand: '', is_featured: false, image_url: '' })
       loadData()
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Erro ao cadastrar produto')
+    }
+  }
+
+  const uploadImage = async (file: File, onUploaded: (url: string) => void) => {
+    setUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      // Deixa o navegador definir o Content-Type (precisa incluir o "boundary" do
+      // multipart, que a instância padrão do axios não gera automaticamente).
+      const res = await api.post('/products/upload-image', formData, {
+        headers: { 'Content-Type': undefined },
+      })
+      onUploaded(res.data.url)
+      toast.success('Imagem enviada!')
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Erro ao enviar imagem')
+    } finally {
+      setUploadingImage(false)
     }
   }
 
@@ -369,6 +390,25 @@ export function AdminDashboard() {
                   <Input label="Preco" type="number" step="0.01" value={newProduct.price} onChange={(e) => setNewProduct({...newProduct, price: parseFloat(e.target.value) || 0})} required />
                   <Input label="Estoque" type="number" value={newProduct.stock} onChange={(e) => setNewProduct({...newProduct, stock: parseInt(e.target.value) || 0})} required />
                   <Input label="Categoria" value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} required />
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Imagem do Produto</label>
+                    <div className="flex items-center gap-4">
+                      {newProduct.image_url && (
+                        <img src={newProduct.image_url} alt="Preview" className="w-16 h-16 object-cover rounded-lg border" />
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={uploadingImage}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) uploadImage(file, (url) => setNewProduct(prev => ({ ...prev, image_url: url })))
+                        }}
+                        className="text-sm"
+                      />
+                      {uploadingImage && <span className="text-sm text-gray-500">Enviando...</span>}
+                    </div>
+                  </div>
                   <div className="md:col-span-2 flex gap-2">
                     <Button type="submit">Salvar</Button>
                     <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>Cancelar</Button>
@@ -388,6 +428,25 @@ export function AdminDashboard() {
                     <Input label="Preco" type="number" step="0.01" value={editingProduct.price} onChange={(e) => setEditingProduct({...editingProduct, price: parseFloat(e.target.value) || 0})} required />
                     <Input label="Estoque" type="number" value={editingProduct.stock} onChange={(e) => setEditingProduct({...editingProduct, stock: parseInt(e.target.value) || 0})} required />
                     <Input label="Categoria" value={editingProduct.category} onChange={(e) => setEditingProduct({...editingProduct, category: e.target.value})} required />
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Imagem do Produto</label>
+                      <div className="flex items-center gap-4">
+                        {editingProduct.image_url && (
+                          <img src={editingProduct.image_url} alt="Preview" className="w-16 h-16 object-cover rounded-lg border" />
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={uploadingImage}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) uploadImage(file, (url) => setEditingProduct((prev: any) => ({ ...prev, image_url: url })))
+                          }}
+                          className="text-sm"
+                        />
+                        {uploadingImage && <span className="text-sm text-gray-500">Enviando...</span>}
+                      </div>
+                    </div>
                     <div className="md:col-span-2 flex gap-2">
                       <Button type="submit">Salvar</Button>
                       <Button type="button" variant="outline" onClick={() => setEditingProduct(null)}>Cancelar</Button>

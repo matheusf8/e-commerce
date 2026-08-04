@@ -45,12 +45,24 @@ Reinicie o backend depois de editar o `.env`.
    `POST /api/orders/{id}/mp-sync`, que busca o status **real** direto na API do
    Mercado Pago (nunca confia só no que vem na URL) e atualiza o pedido.
 
+## Webhook (confirmação automática, sem depender do redirect)
+
+O endpoint `POST /api/orders/webhook/mercadopago` já existe no código e é chamado
+pelo próprio Mercado Pago quando o status de um pagamento muda — funciona mesmo
+que o cliente feche a aba antes de voltar pro site. Ele só ativa quando:
+
+1. `BACKEND_URL` no `.env` aponta pra uma URL `https://` pública (localhost não serve
+   — o Mercado Pago precisa conseguir alcançar o endpoint pela internet).
+2. `MP_WEBHOOK_SECRET` está configurado — pegue a "Chave secreta" na seção
+   "Webhooks" do painel da sua aplicação no Mercado Pago. Sem isso, qualquer um
+   poderia forjar uma notificação de pagamento aprovado; o código verifica a
+   assinatura HMAC antes de processar.
+
 ## Limitações desta integração (modo dev local)
 
-- **Sem webhook**: o Mercado Pago não consegue notificar automaticamente um
-  `localhost`, então a confirmação depende do redirect de volta + `/mp-sync`. Se o
-  usuário fechar a aba antes de voltar, o pedido fica `pending` até alguém chamar
-  `/mp-sync` de novo (ou você reenviar o `payment_id` manualmente).
-- Pra produção de verdade: trocar `MP_ACCESS_TOKEN` pelo de produção, expor um
-  `notification_url` público (webhook) e validar a assinatura das notificações do
-  Mercado Pago.
+- **Sem webhook em localhost**: o Mercado Pago não consegue notificar automaticamente
+  um `localhost`, então em dev a confirmação depende do redirect de volta + `/mp-sync`.
+  Se o usuário fechar a aba antes de voltar, o pedido fica `pending` até alguém chamar
+  `/mp-sync` de novo — o webhook (ver acima) resolve isso, mas só depois do deploy.
+- Pra produção de verdade: trocar `MP_ACCESS_TOKEN` pelo de produção (`APP_USR-...`),
+  e configurar `BACKEND_URL`/`MP_WEBHOOK_SECRET` como descrito acima.

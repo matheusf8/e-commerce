@@ -1,5 +1,8 @@
 """Order endpoints"""
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+import hmac
+import hashlib
+import logging
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.db.database import get_db
@@ -7,6 +10,9 @@ from app.schemas import OrderCreate
 from app.services import OrderService
 from app.auth import get_current_user, get_current_admin
 from app.models import User
+from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/orders", tags=["Orders"])
 
@@ -116,3 +122,54 @@ async def sync_mp_payment(
 ):
     """Confirm the real payment status with Mercado Pago's API and update the order"""
     return OrderService.sync_mp_payment(db, order_id, current_user, sync_data.payment_id)
+
+
+def _verify_mp_signature(request: Request, data_id: str) -> bool:
+    """Verify a Mercado Pago webhook really came from Mercado Pago.
+
+    Recipe from Mercado Pago's docs: HMAC-SHA256 over a manifest string, keyed by
+    the "Chave secreta" configured for the app's webhooks. If MP_WEBHOOK_SECRET
+    isn't set (e.g. still setting things up, or running locally where MP can't
+    reach this endpoint at all), verification is skipped — this must be
+    configured before relying on this endpoint in production.
+    """
+    if not settings.mp_webhook_secret:
+        logger.warning("MP webhook received but MP_WEBHOOK_SECRET is not set — skipping signature check")
+        return True
+
+    signature_header = request.headers.get("x-signature", "")
+    request_id = request.headers.get("x-request-id", "")
+    parts = dict(p.split("=", 1) for p in signature_header.split(",") if "=" in p)
+    ts = parts.get("ts", "")
+    received_hash = parts.get("v1", "")
+    if not ts or not received_hash:
+        return False
+
+    manifest = f"id:{data_id.lower()};request-id:{request_id};ts:{ts};"
+    computed_hash = hmac.new(
+        settings.mp_webhook_secret.encode(), manifest.encode(), hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(computed_hash, received_hash)
+
+
+@router.post("/webhook/mercadopago")
+async def mercadopago_webhook(request: Request, db: Session = Depends(get_db)):
+    """Server-to-server notification Mercado Pago calls when a payment's status
+    changes — this is what makes payment confirmation work even if the customer
+    closes the tab instead of clicking back to the site. Only reachable once this
+    backend is deployed behind a public URL (registered as notification_url on
+    the preference); does nothing useful against localhost.
+    """
+    payload = await request.json()
+    data_id = str(request.query_params.get("data.id") or payload.get("data", {}).get("id") or "")
+    notif_type = request.query_params.get("type") or payload.get("type")
+
+    if not data_id or notif_type != "payment":
+        return {"status": "ignored"}
+
+    if not _verify_mp_signature(request, data_id):
+        logger.warning("MP webhook signature mismatch, ignoring payload for payment %s", data_id)
+        return {"status": "invalid_signature"}
+
+    OrderService.handle_mp_webhook(db, data_id)
+    return {"status": "ok"}

@@ -252,3 +252,31 @@ test.describe.serial('Jornada do admin', () => {
     await expect(page.getByRole('link', { name: 'Entrar' })).toBeVisible()
   })
 })
+
+test.describe('Esqueci minha senha / redefinir senha', () => {
+  test('link "Esqueci minha senha" leva pra tela certa', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByRole('link', { name: 'Esqueci minha senha' }).click()
+    await expect(page).toHaveURL(/\/forgot-password/)
+  })
+
+  test('solicitar redefinição mostra mensagem genérica (não revela se o email existe)', async ({ page }) => {
+    await page.goto('/forgot-password')
+    await page.locator('input[type="email"]').fill(`nao-existe-${uniqueId}@example.com`)
+    await page.getByRole('button', { name: 'Enviar link de redefinição' }).click()
+    await expect(page.getByText(/Se esse email estiver cadastrado/)).toBeVisible()
+  })
+
+  test('reset-password sem token mostra link inválido', async ({ page }) => {
+    await page.goto('/reset-password')
+    await expect(page.getByText('Link inválido')).toBeVisible()
+  })
+
+  test('reset-password com token inválido mostra erro ao tentar redefinir', async ({ page }) => {
+    await page.goto('/reset-password?token=token-fake-invalido')
+    await page.locator('input[type="password"]').first().fill('novaSenha123')
+    await page.locator('input[type="password"]').nth(1).fill('novaSenha123')
+    await page.getByRole('button', { name: 'Redefinir senha' }).click()
+    await expect(page.getByText(/inválido ou expirado/)).toBeVisible()
+  })
+})

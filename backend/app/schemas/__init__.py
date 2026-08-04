@@ -10,7 +10,7 @@ from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse, P
 from app.schemas.cart import CartItemCreate, CartItemUpdate, CartResponse
 from app.schemas.order import OrderCreate, OrderResponse, OrderDetailResponse
 from app.schemas.review import ReviewCreate, ReviewUpdate, ReviewResponse
-from app.schemas.auth import TokenResponse, RefreshTokenRequest
+from app.schemas.auth import TokenResponse, RefreshTokenRequest, ForgotPasswordRequest, ResetPasswordRequest
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
 
 __all__ = [
@@ -35,6 +35,8 @@ __all__ = [
     "ReviewResponse",
     "TokenResponse",
     "RefreshTokenRequest",
+    "ForgotPasswordRequest",
+    "ResetPasswordRequest",
     "CategoryCreate",
     "CategoryUpdate",
     "CategoryResponse",

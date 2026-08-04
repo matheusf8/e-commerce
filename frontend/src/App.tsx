@@ -8,6 +8,8 @@ import { Checkout } from '@/pages/Checkout'
 import { OrderConfirmation } from '@/pages/OrderConfirmation'
 import { Login } from '@/pages/Login'
 import { Register } from '@/pages/Login/Register'
+import { ForgotPassword } from '@/pages/ForgotPassword'
+import { ResetPassword } from '@/pages/ResetPassword'
 import { About } from '@/pages/About'
 import { Contact } from '@/pages/Contact'
 import { Privacy } from '@/pages/Privacy'
@@ -56,6 +58,8 @@ export default function App() {
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/order/:orderId" element={<OrderDetail />} />
             <Route path="/wishlist" element={<Wishlist />} />

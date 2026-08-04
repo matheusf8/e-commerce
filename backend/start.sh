@@ -42,6 +42,12 @@ except Exception as e:
 
 echo ""
 echo "=========================================="
+echo "  Running database migrations (Alembic)..."
+echo "=========================================="
+alembic upgrade head
+
+echo ""
+echo "=========================================="
 echo "  Running database seed..."
 echo "=========================================="
 python seed_db.py

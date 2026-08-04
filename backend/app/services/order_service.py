@@ -6,6 +6,7 @@ from fastapi import HTTPException, status
 from app.models import Order, OrderItem, CartItem, Product, User
 from app.schemas import OrderCreate
 from app.config import settings
+from app.services.email_service import EmailService
 import uuid
 
 
@@ -210,6 +211,9 @@ class OrderService:
         order_dict["payment_message"] = payment_result["message"]
         order_dict["payment_approved"] = payment_result["payment_status"] == "completed"
 
+        if order_dict["payment_approved"]:
+            EmailService.send_order_confirmation_email(user.email, user.full_name, order_dict)
+
         return order_dict
 
     @staticmethod
@@ -255,6 +259,9 @@ class OrderService:
         result["payment_message"] = payment_result["message"]
         result["payment_approved"] = payment_result["payment_status"] == "completed"
 
+        if result["payment_approved"]:
+            EmailService.send_order_confirmation_email(user.email, user.full_name, result)
+
         return result
 
     @staticmethod
@@ -299,6 +306,10 @@ class OrderService:
                 "failure": f"{settings.frontend_url}/checkout?retry={order.id}&mp_status=failure",
             },
         }
+        # Only register a webhook if the backend is actually reachable from the
+        # internet — Mercado Pago can't call back into localhost.
+        if settings.backend_url.startswith("https://"):
+            preference_data["notification_url"] = f"{settings.backend_url}/api/orders/webhook/mercadopago"
         # auto_return requires back_urls.success to be HTTPS — the Mercado Pago API
         # rejects it outright over plain http (as localhost is in dev). Without it,
         # the user just clicks "Voltar ao site" on Mercado Pago's own success page,
@@ -325,6 +336,35 @@ class OrderService:
         }
 
     @staticmethod
+    def _apply_mp_payment_to_order(db: Session, order: Order, payment: dict) -> None:
+        """Shared by sync_mp_payment (user-triggered) and the webhook (Mercado Pago
+        server-to-server): stamps a fetched MP payment object onto an order."""
+        was_already_completed = order.payment_status == "completed"
+        mp_status = payment.get("status")  # approved, pending, in_process, rejected, cancelled
+
+        status_map = {
+            "approved": "completed",
+            "pending": "pending",
+            "in_process": "pending",
+            "rejected": "failed",
+            "cancelled": "failed",
+        }
+        order.payment_status = status_map.get(mp_status, "pending")
+        order.transaction_id = str(payment.get("id"))
+        order.payment_message = f"Mercado Pago: {mp_status} ({payment.get('status_detail', '')})".strip()
+
+        if order.payment_status == "completed":
+            order.status = "processing"
+
+        db.commit()
+        db.refresh(order)
+
+        if order.payment_status == "completed" and not was_already_completed and order.user:
+            EmailService.send_order_confirmation_email(
+                order.user.email, order.user.full_name, OrderService._order_to_dict(order)
+            )
+
+    @staticmethod
     def sync_mp_payment(db: Session, order_id: str, user: User, payment_id: str) -> dict:
         """Fetch the definitive payment status straight from Mercado Pago's API and
         update the order accordingly. Never trust the status query params the browser
@@ -345,30 +385,37 @@ class OrderService:
                 detail="Não foi possível confirmar o pagamento no Mercado Pago"
             )
 
-        payment = result["response"]
-        mp_status = payment.get("status")  # approved, pending, in_process, rejected, cancelled
-
-        status_map = {
-            "approved": "completed",
-            "pending": "pending",
-            "in_process": "pending",
-            "rejected": "failed",
-            "cancelled": "failed",
-        }
-        order.payment_status = status_map.get(mp_status, "pending")
-        order.transaction_id = str(payment.get("id"))
-        order.payment_message = f"Mercado Pago: {mp_status} ({payment.get('status_detail', '')})".strip()
-
-        if order.payment_status == "completed":
-            order.status = "processing"
-
-        db.commit()
-        db.refresh(order)
+        OrderService._apply_mp_payment_to_order(db, order, result["response"])
 
         result_dict = OrderService._order_to_dict(order)
         result_dict["payment_message"] = order.payment_message
         result_dict["payment_approved"] = order.payment_status == "completed"
         return result_dict
+
+    @staticmethod
+    def handle_mp_webhook(db: Session, payment_id: str) -> None:
+        """Server-to-server notification from Mercado Pago (no logged-in user in this
+        request — the caller is Mercado Pago itself, not a browser). Looks the order up
+        via `external_reference` on the payment (set to our order.id when the preference
+        was created), not via a user-scoped query."""
+        if not settings.mp_access_token:
+            return
+
+        sdk = mercadopago.SDK(settings.mp_access_token)
+        result = sdk.payment().get(payment_id)
+        if result.get("status") != 200:
+            return
+
+        payment = result["response"]
+        order_id = payment.get("external_reference")
+        if not order_id:
+            return
+
+        order = db.query(Order).filter(Order.id == order_id).first()
+        if not order:
+            return
+
+        OrderService._apply_mp_payment_to_order(db, order, payment)
 
     @staticmethod
     def get_order(db: Session, order_id: str, user: User) -> Order:

@@ -14,3 +14,6 @@ httpx==0.25.1
 python-multipart==0.0.6
 email-validator==2.1.0
 mercadopago==2.2.1
+alembic==1.19.0
+cloudinary==1.45.0
+resend==2.35.0

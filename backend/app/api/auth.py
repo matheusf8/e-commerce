@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.schemas import UserCreate, UserLogin, UserResponse, TokenResponse, RefreshTokenRequest, UserUpdate, UserDetailResponse
+from app.schemas import UserCreate, UserLogin, UserResponse, TokenResponse, RefreshTokenRequest, UserUpdate, UserDetailResponse, ForgotPasswordRequest, ResetPasswordRequest
 from app.services import AuthService
 from app.auth import get_current_user
 from app.models import User
@@ -62,15 +62,12 @@ async def logout(current_user: User = Depends(get_current_user)):
     """Logout user (client should discard token)"""
     return {"message": "Successfully logged out"}
 
-@router.get("/users/count")
-async def get_users_count(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get count of registered users"""
-    # Only admin can see this
-    if not current_user.is_admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
-    from app.models import User as UserModel
-    count = db.query(UserModel).count()
-    return {"count": count}
+@router.post("/forgot-password")
+async def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Request a password reset email"""
+    return AuthService.forgot_password(db, data.email)
+
+@router.post("/reset-password")
+async def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Finalize a password reset using the token emailed by /forgot-password"""
+    return AuthService.reset_password(db, data.token, data.new_password)

@@ -1,14 +1,25 @@
 """Product endpoints"""
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.orm import Session
+import cloudinary
+import cloudinary.uploader
 from app.db.database import get_db
 from app.schemas import ProductCreate, ProductResponse, ProductDetailResponse, ProductUpdate, ProductListResponse
 from app.services import ProductService
 from app.auth import get_current_admin
 from app.models import User
+from app.config import settings
 from typing import List
 
 router = APIRouter(prefix="/api/products", tags=["Products"])
+
+if settings.cloudinary_cloud_name:
+    cloudinary.config(
+        cloud_name=settings.cloudinary_cloud_name,
+        api_key=settings.cloudinary_api_key,
+        api_secret=settings.cloudinary_api_secret,
+        secure=True,
+    )
 
 @router.get("", response_model=ProductListResponse)
 async def list_products(
@@ -65,6 +76,29 @@ async def list_all_products_admin(
         "skip": skip,
         "limit": limit
     }
+
+@router.post("/upload-image")
+async def upload_product_image(
+    file: UploadFile = File(...),
+    admin: User = Depends(get_current_admin)
+):
+    """Upload a product image to Cloudinary and return its URL (admin only)"""
+    if not settings.cloudinary_cloud_name:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Upload de imagem não está configurado (defina as credenciais do Cloudinary no .env)"
+        )
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Arquivo precisa ser uma imagem")
+
+    try:
+        result = cloudinary.uploader.upload(file.file, folder="products")
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Falha ao enviar imagem: {e}"
+        )
+    return {"url": result["secure_url"]}
 
 @router.get("/{product_id}", response_model=ProductDetailResponse)
 async def get_product(product_id: str, db: Session = Depends(get_db)):

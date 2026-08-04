@@ -54,8 +54,13 @@ export const authService = {
     api.post('/auth/login', { email, password }),
   
   getProfile: () => api.get('/auth/me'),
-  
+
   logout: () => api.post('/auth/logout'),
+
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
+
+  resetPassword: (token: string, newPassword: string) =>
+    api.post('/auth/reset-password', { token, new_password: newPassword }),
 }
 
 // Products Service

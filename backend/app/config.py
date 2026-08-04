@@ -21,8 +21,26 @@ class Settings(BaseSettings):
     # Frontend (used to build Mercado Pago back_urls)
     frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
+    # This backend's own public URL (used to build the Mercado Pago webhook
+    # notification_url — only reachable once actually deployed, useless as
+    # localhost since Mercado Pago's servers can't call back into it)
+    backend_url: str = os.getenv("BACKEND_URL", "http://localhost:8000")
+
     # Mercado Pago (sandbox/test credentials only — never commit a real APP_USR- token)
     mp_access_token: str = os.getenv("MP_ACCESS_TOKEN", "")
+    # "Chave secreta" from the app's Webhooks config page, used to verify that a
+    # webhook call really came from Mercado Pago. Leave empty in local dev (there's
+    # no public URL for MP to call anyway); required once deployed.
+    mp_webhook_secret: str = os.getenv("MP_WEBHOOK_SECRET", "")
+
+    # Cloudinary (product image uploads)
+    cloudinary_cloud_name: str = os.getenv("CLOUDINARY_CLOUD_NAME", "")
+    cloudinary_api_key: str = os.getenv("CLOUDINARY_API_KEY", "")
+    cloudinary_api_secret: str = os.getenv("CLOUDINARY_API_SECRET", "")
+
+    # Resend (transactional email: boas-vindas, confirmação de pedido, redefinir senha)
+    resend_api_key: str = os.getenv("RESEND_API_KEY", "")
+    email_from: str = os.getenv("EMAIL_FROM", "E-Shop <onboarding@resend.dev>")
 
     # Environment
     environment: str = os.getenv("ENVIRONMENT", "development")

@@ -54,6 +54,16 @@ class JWTHandler:
         except JWTError:
             return None
 
+    @staticmethod
+    def verify_token_payload(token: str) -> Optional[dict]:
+        """Verify a JWT and return its full payload (not just `sub`) — used for
+        purpose-scoped tokens like password reset, where a custom claim decides
+        what the token is allowed to do."""
+        try:
+            return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        except JWTError:
+            return None
+
 
 class PasswordHandler:
     """Handle password hashing and verification using bcrypt"""

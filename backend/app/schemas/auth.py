@@ -1,5 +1,5 @@
 """Auth schemas"""
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
 class TokenResponse(BaseModel):
@@ -17,3 +17,12 @@ class TokenPayload(BaseModel):
     sub: str  # user_id
     exp: int
     iat: int
+
+class ForgotPasswordRequest(BaseModel):
+    """Forgot password request schema"""
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    """Reset password request schema"""
+    token: str
+    new_password: str = Field(..., min_length=8)
