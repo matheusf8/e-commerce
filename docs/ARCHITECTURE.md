@@ -1,5 +1,10 @@
 # 🏗️ Arquitetura do Projeto
 
+> Documento conceitual: mostra as camadas e o fluxo de dados. Alguns nomes de
+> arquivo abaixo são ilustrativos e podem não bater 1:1 com o código atual
+> (ex: banco em uso local é SQLite, não Postgres; sem Redis/Alembic ainda).
+> Para a estrutura real, veja o `CLAUDE.md` na raiz do repositório.
+
 ## Visão Geral
 
 ```

@@ -1,5 +1,9 @@
 # 📚 API Documentation
 
+> Esta é uma referência ilustrativa dos endpoints principais. Para a lista completa
+> e sempre atualizada (inclui reviews, wishlist, categories, Mercado Pago etc.),
+> use o Swagger em `http://localhost:8000/docs`.
+
 ## Base URL
 
 - **Development:** `http://localhost:8000`

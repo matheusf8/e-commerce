@@ -62,6 +62,9 @@ O backend estará disponível em: **http://localhost:8000**
 
 Documentação Swagger: **http://localhost:8000/docs**
 
+Rode `python seed_db.py` (dentro de `backend/`) para popular o banco com produtos de
+exemplo e um usuário admin de teste: `admin@example.com` / `admin123`.
+
 ### 3. Setup Frontend
 
 \`\`\`bash

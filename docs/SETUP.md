@@ -20,9 +20,8 @@ SMTP_PORT=587
 SMTP_USER=seu-email@gmail.com
 SMTP_PASSWORD=sua-senha-app
 
-# Stripe (para pagamentos)
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PUBLIC_KEY=pk_test_...
+# Mercado Pago (para pagamentos) — veja docs/PAGAMENTO_MERCADO_PAGO.md
+MP_ACCESS_TOKEN=TEST-...
 \`\`\`
 
 ## Banco de Dados
