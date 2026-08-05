@@ -29,6 +29,10 @@ services:
       DATABASE_URL: postgresql://ecommerce_user:ecommerce_password@db:5432/ecommerce_db
       SECRET_KEY: your-secret-key-change-in-production
       ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:5173,http://localhost:5174"
+      ENVIRONMENT: development
+      # start.sh só roda seed_db.py quando isso é "true" — aqui em dev local
+      # queremos o catálogo de exemplo pronto de cara.
+      SEED_DB: "true"
     volumes:
       - ./backend:/app
     depends_on:

@@ -237,23 +237,10 @@ npm run type-check
 
 ## 🚀 Deploy
 
-### Backend (Render.com)
-\`\`\`bash
-# Criar account no Render
-# Conectar repositório GitHub
-# Criar novo Web Service
-# Settings:
-# - Build Command: pip install -r requirements.txt
-# - Start Command: uvicorn main:app --host 0.0.0.0
-\`\`\`
-
-### Frontend (Vercel)
-\`\`\`bash
-# Criar account no Vercel
-# Conectar repositório GitHub
-# Vercel detecta automaticamente Vite
-# Deploy automático em cada push
-\`\`\`
+Backend (Render, via `render.yaml` na raiz) + frontend (Vercel, via
+`frontend/vercel.json`) + domínio próprio + Mercado Pago/Cloudinary/Resend em
+modo produção — checklist completo e na ordem certa em
+[docs/DEPLOY.md](./docs/DEPLOY.md).
 
 ## 📚 Documentação Detalhada
 
@@ -261,6 +248,7 @@ npm run type-check
 - [Setup Avançado](./docs/SETUP.md)
 - [Arquitetura](./docs/ARCHITECTURE.md)
 - [Pagamento com Mercado Pago (sandbox)](./docs/PAGAMENTO_MERCADO_PAGO.md)
+- [Deploy de produção](./docs/DEPLOY.md)
 
 ## 🤝 Contributing
 

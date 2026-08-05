@@ -48,13 +48,23 @@ alembic upgrade head
 
 echo ""
 echo "=========================================="
-echo "  Running database seed..."
+echo "  Database seed..."
 echo "=========================================="
-python seed_db.py
+# Opt-in only (SEED_DB=true). Off by default so a client's real catalog
+# never risks a boot accidentally reintroducing the demo admin/products.
+# docker-compose.yml sets SEED_DB=true for local dev convenience.
+if [ "${SEED_DB:-false}" = "true" ]; then
+    python seed_db.py
+else
+    echo "  ⏭️  SEED_DB não é 'true' — pulando seed."
+fi
 
 echo ""
 echo "=========================================="
 echo "  Starting Uvicorn server..."
 echo "=========================================="
-exec uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+# No --reload: this is a running container, not a dev environment with a
+# file watcher doing anything useful. ${PORT:-8000} so this also works
+# unchanged on platforms (e.g. Render) that inject their own PORT.
+exec uvicorn main:app --host 0.0.0.0 --port "${PORT:-8000}"
 

@@ -21,9 +21,10 @@ RUN chmod +x start.sh
 # Expose port
 EXPOSE 8000
 
-# Health check
+# Health check (PORT falls back to 8000 to match docker-compose; platforms
+# like Render that inject their own PORT are covered too)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+    CMD python -c "import os, urllib.request; urllib.request.urlopen('http://localhost:' + os.getenv('PORT', '8000') + '/health')" || exit 1
 
 # Run startup script (seed database + start server)
 CMD ["/bin/bash", "start.sh"]
