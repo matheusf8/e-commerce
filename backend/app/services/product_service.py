@@ -28,8 +28,11 @@ class ProductService:
     @staticmethod
     def get_product(db: Session, product_id: str) -> Product:
         """Get product by ID (only active for customers)"""
-        product = db.query(Product).filter(Product.id == product_id).first()
-        
+        product = db.query(Product).filter(
+            Product.id == product_id,
+            Product.is_active == True
+        ).first()
+
         if not product:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -101,8 +104,8 @@ class ProductService:
 
     @staticmethod
     def update_product(db: Session, product_id: str, update_data: ProductUpdate) -> Product:
-        """Update product"""
-        product = ProductService.get_product(db, product_id)
+        """Update product (admin — includes inactive, e.g. to reactivate a soft-deleted product)"""
+        product = ProductService.get_product_admin(db, product_id)
         
         update_dict = update_data.model_dump(exclude_unset=True)
         for field, value in update_dict.items():
@@ -114,8 +117,8 @@ class ProductService:
 
     @staticmethod
     def delete_product(db: Session, product_id: str):
-        """Soft delete product"""
-        product = ProductService.get_product(db, product_id)
+        """Soft delete product (admin — finds it even if already inactive, so this stays idempotent)"""
+        product = ProductService.get_product_admin(db, product_id)
         product.is_active = False
         db.commit()
 

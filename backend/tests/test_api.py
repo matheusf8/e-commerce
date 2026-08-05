@@ -303,3 +303,67 @@ def test_list_categories(client: TestClient):
     data = response.json()
     assert isinstance(data, list)
 
+
+@pytest.fixture(scope="module")
+def admin_headers(client: TestClient):
+    """Fixture para registrar um usuário e promovê-lo a admin direto no banco
+    de teste (não existe endpoint público pra isso, é intencional)."""
+    from tests.conftest import TestingSessionLocal
+    from app.models import User
+
+    email = f"admin_{uuid.uuid4()}@example.com"
+    password = "password123"
+
+    client.post("/api/auth/register", json={
+        "email": email, "password": password, "full_name": "Admin Test User"
+    })
+
+    db = TestingSessionLocal()
+    user = db.query(User).filter(User.email == email).first()
+    user.is_admin = True
+    db.commit()
+    db.close()
+
+    login_res = client.post("/api/auth/login", json={"email": email, "password": password})
+    token = login_res.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+def test_deleted_product_not_accessible_to_customers(admin_headers, client: TestClient):
+    """Regressão: um produto soft-deleted (is_active=False) não pode continuar
+    acessível pelo detalhe público — antes dessa correção, DELETE marcava
+    is_active=False mas GET /api/products/{id} não filtrava por is_active,
+    então o produto "deletado" continuava com página de detalhe funcionando
+    normalmente (preço, estoque, etc.) pra quem tivesse o link direto."""
+    # Estoque alto de propósito: a listagem padrão ordena por mais recente
+    # (então este produto vira products[0] pros testes que rodam depois,
+    # em outros arquivos, que pegam "o primeiro produto da lista" sem
+    # checar estoque — stock baixo aqui derrubaria esses testes por
+    # "insufficient stock", não por causa do que estamos testando).
+    create_res = client.post("/api/products", json={
+        "name": "Produto Para Deletar",
+        "price": 10.0,
+        "category": "Teste",
+        "stock": 999,
+        "sku": f"DEL-{uuid.uuid4()}",
+    }, headers=admin_headers)
+    assert create_res.status_code == 201
+    product_id = create_res.json()["id"]
+
+    # Antes de deletar, o detalhe público funciona normalmente
+    assert client.get(f"/api/products/{product_id}").status_code == 200
+
+    delete_res = client.delete(f"/api/products/{product_id}", headers=admin_headers)
+    assert delete_res.status_code == 204
+
+    # Depois de deletado (soft delete), não deve mais aparecer pro público
+    get_res = client.get(f"/api/products/{product_id}")
+    assert get_res.status_code == 404
+
+    # Admin consegue reativar (edita e seta is_active de volta pra True)
+    reactivate_res = client.put(
+        f"/api/products/{product_id}", json={"is_active": True}, headers=admin_headers
+    )
+    assert reactivate_res.status_code == 200
+    assert client.get(f"/api/products/{product_id}").status_code == 200
+
