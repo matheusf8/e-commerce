@@ -77,3 +77,5 @@ dist/
 # Screenshots temporarios (podem conter credenciais)
 prints/
 backend/prints/
+print/
+backend/print/
