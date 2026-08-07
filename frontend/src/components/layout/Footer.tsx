@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { siteConfig } from '@/config/site'
 
 export function Footer() {
   return (
@@ -7,7 +8,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About */}
           <div>
-            <h3 className="font-bold text-lg mb-4">E-Shop</h3>
+            <h3 className="font-bold text-lg mb-4">{siteConfig.name}</h3>
             <p className="text-gray-400 text-sm">
               A melhor plataforma de e-commerce para compras online com segurança e facilidade.
             </p>
@@ -38,15 +39,15 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Contato</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li>Email: info@eshop.com</li>
-              <li>Telefone: (11) 9999-9999</li>
-              <li>Endereço: São Paulo, SP</li>
+              <li>Email: {siteConfig.supportEmail}</li>
+              {siteConfig.supportPhone && <li>Telefone: {siteConfig.supportPhone}</li>}
+              {siteConfig.address && <li>Endereço: {siteConfig.address}</li>}
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-          <p>&copy; 2024 E-Shop. Todos os direitos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} {siteConfig.name}. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>

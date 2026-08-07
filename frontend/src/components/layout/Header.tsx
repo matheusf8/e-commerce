@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { useCartStore } from '@/store'
+import { siteConfig } from '@/config/site'
 
 interface HeaderProps {
   cartItemCount?: number
@@ -33,7 +34,7 @@ export function Header({ cartItemCount = 0, isAuthenticated = false, isAdmin = f
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <Zap className="text-blue-600" size={28} />
-            <span className="font-bold text-xl text-gray-900">E-Shop</span>
+            <span className="font-bold text-xl text-gray-900">{siteConfig.name}</span>
           </Link>
 
           {/* Navigation */}

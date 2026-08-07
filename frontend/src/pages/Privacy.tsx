@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
 import { LegalPage } from './LegalPage'
+import { siteConfig } from '@/config/site'
 
 export function Privacy() {
   return (
     <LegalPage title="Política de Privacidade" updatedAt="Agosto de 2026">
       <p>
-        Esta política descreve como o E-Shop coleta, usa e protege as informações
+        Esta política descreve como {siteConfig.name} coleta, usa e protege as informações
         fornecidas pelos usuários da plataforma.
       </p>
 

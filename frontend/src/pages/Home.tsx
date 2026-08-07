@@ -5,13 +5,25 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { productService } from "@/services/api";
+import { siteConfig } from "@/config/site";
+
+// Cores de fundo dos cards de categoria na Home, aplicadas em ordem e
+// repetidas se houver mais categorias reais do que cores na lista.
+const CATEGORY_TILE_COLORS = [
+  "from-blue-500 to-blue-700",
+  "from-purple-500 to-purple-700",
+  "from-pink-500 to-pink-700",
+  "from-green-500 to-green-700",
+];
 
 export function Home() {
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [categoryTiles, setCategoryTiles] = useState<{ name: string; count: number }[]>([]);
 
   useEffect(() => {
     loadFeaturedProducts();
+    loadCategoryTiles();
   }, []);
 
   const loadFeaturedProducts = async () => {
@@ -25,18 +37,32 @@ export function Home() {
     }
   };
 
+  // Antes, essas 4 categorias e seus totais ("45 produtos" etc.) eram fixos
+  // no código — sobra de template que não batia com o catálogo real (tinha
+  // categoria "Moda"/"Casa" que nunca existiu, e contagem inventada).
+  // Agora busca as categorias reais e o total de cada uma na API, então
+  // sempre reflete o catálogo de verdade, seja qual for o cliente.
+  const loadCategoryTiles = async () => {
+    try {
+      const categoriesRes = await productService.getCategories();
+      const names: string[] = categoriesRes.data?.categories || [];
+      const withCounts = await Promise.all(
+        names.map(async (name) => {
+          const res = await productService.getAll(0, 1, name);
+          return { name, count: res.data?.total ?? 0 };
+        })
+      );
+      setCategoryTiles(withCounts.filter((c) => c.count > 0));
+    } catch (error) {
+      console.error("Failed to load category tiles:", error);
+    }
+  };
+
   const benefits = [
     { icon: Truck, title: "Frete Gratis", desc: "Em compras acima de R$ 200" },
     { icon: Shield, title: "Compra Segura", desc: "Dados protegidos com criptografia" },
     { icon: CreditCard, title: "Parcele em 12x", desc: "No cartao de credito" },
     { icon: HeadphonesIcon, title: "Suporte 24/7", desc: "Atendimento online" },
-  ];
-
-  const categories = [
-    { name: "Eletronicos", count: "45 produtos", color: "from-blue-500 to-blue-700" },
-    { name: "Acessorios", count: "32 produtos", color: "from-purple-500 to-purple-700" },
-    { name: "Moda", count: "28 produtos", color: "from-pink-500 to-pink-700" },
-    { name: "Casa", count: "20 produtos", color: "from-green-500 to-green-700" },
   ];
 
   return (
@@ -63,7 +89,7 @@ export function Home() {
             </h1>
             
             <p className="text-xl md:text-2xl mb-10 text-blue-100 max-w-2xl mx-auto">
-              Os melhores produtos com precos incriveis, entrega rapida e garantia de qualidade.
+              {siteConfig.tagline}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -80,14 +106,26 @@ export function Home() {
               </Link>
             </div>
             
-            <div className="mt-16 flex items-center justify-center gap-8 text-sm">
-              <div className="flex items-center gap-2">
-                <Star size={20} className="text-yellow-300 fill-yellow-300" />
-                <span>4.9 de 5 estrelas</span>
-              </div>
-              <div className="w-px h-8 bg-white/20"></div>
-              <span>+10.000 clientes</span>
-              <div className="w-px h-8 bg-white/20"></div>
+            {/* "4.9 de 5 estrelas" / "+10.000 clientes" eram números fixos no
+                código, sem nenhum dado real por trás — propaganda enganosa
+                pra uma loja nova. Só aparecem agora se VITE_SITE_RATING /
+                VITE_SITE_CUSTOMER_COUNT forem preenchidos com métricas reais. */}
+            <div className="mt-16 flex items-center justify-center gap-8 text-sm flex-wrap">
+              {siteConfig.rating && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Star size={20} className="text-yellow-300 fill-yellow-300" />
+                    <span>{siteConfig.rating}</span>
+                  </div>
+                  <div className="w-px h-8 bg-white/20"></div>
+                </>
+              )}
+              {siteConfig.customerCount && (
+                <>
+                  <span>{siteConfig.customerCount}</span>
+                  <div className="w-px h-8 bg-white/20"></div>
+                </>
+              )}
               <span>Entrega em todo Brasil</span>
             </div>
           </div>
@@ -130,26 +168,28 @@ export function Home() {
       </section>
 
       {/* Categories */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Categorias</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {categories.map((cat, index) => (
-              <Link key={index} to={"/catalog?category=" + cat.name} className="group">
-                <div className={"relative h-48 rounded-2xl overflow-hidden bg-gradient-to-br " + cat.color}>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-white">
-                      <h3 className="text-xl font-bold mb-1">{cat.name}</h3>
-                      <p className="text-sm text-white/80">{cat.count}</p>
+      {categoryTiles.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Categorias</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {categoryTiles.map((cat, index) => (
+                <Link key={cat.name} to={"/catalog?category=" + cat.name} className="group">
+                  <div className={"relative h-48 rounded-2xl overflow-hidden bg-gradient-to-br " + CATEGORY_TILE_COLORS[index % CATEGORY_TILE_COLORS.length]}>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <h3 className="text-xl font-bold mb-1">{cat.name}</h3>
+                        <p className="text-sm text-white/80">{cat.count} produto{cat.count !== 1 ? "s" : ""}</p>
+                      </div>
                     </div>
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all"></div>
                   </div>
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all"></div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-700">

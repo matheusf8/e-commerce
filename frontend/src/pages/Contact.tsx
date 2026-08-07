@@ -3,6 +3,7 @@ import { Mail, Phone, MapPin, Send } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
+import { siteConfig } from '@/config/site'
 import toast from 'react-hot-toast'
 
 export function Contact() {
@@ -34,23 +35,27 @@ export function Contact() {
             <Mail size={20} className="text-blue-600 mt-1" />
             <div>
               <p className="font-semibold text-gray-900">Email</p>
-              <p className="text-gray-600 text-sm">info@eshop.com</p>
+              <p className="text-gray-600 text-sm">{siteConfig.supportEmail}</p>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <Phone size={20} className="text-blue-600 mt-1" />
-            <div>
-              <p className="font-semibold text-gray-900">Telefone</p>
-              <p className="text-gray-600 text-sm">(11) 9999-9999</p>
+          {siteConfig.supportPhone && (
+            <div className="flex items-start gap-3">
+              <Phone size={20} className="text-blue-600 mt-1" />
+              <div>
+                <p className="font-semibold text-gray-900">Telefone</p>
+                <p className="text-gray-600 text-sm">{siteConfig.supportPhone}</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <MapPin size={20} className="text-blue-600 mt-1" />
-            <div>
-              <p className="font-semibold text-gray-900">Endereço</p>
-              <p className="text-gray-600 text-sm">São Paulo, SP</p>
+          )}
+          {siteConfig.address && (
+            <div className="flex items-start gap-3">
+              <MapPin size={20} className="text-blue-600 mt-1" />
+              <div>
+                <p className="font-semibold text-gray-900">Endereço</p>
+                <p className="text-gray-600 text-sm">{siteConfig.address}</p>
+              </div>
             </div>
-          </div>
+          )}
         </Card>
 
         <Card className="p-6 md:col-span-2">

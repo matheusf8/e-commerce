@@ -1,10 +1,11 @@
 import { LegalPage } from './LegalPage'
+import { siteConfig } from '@/config/site'
 
 export function Terms() {
   return (
     <LegalPage title="Termos de Uso" updatedAt="Agosto de 2026">
       <p>
-        Ao criar uma conta e realizar compras no E-Shop, você concorda com os
+        Ao criar uma conta e realizar compras {siteConfig.legalName ? `com ${siteConfig.legalName} (${siteConfig.name})` : `no ${siteConfig.name}`}, você concorda com os
         termos descritos abaixo.
       </p>
 
