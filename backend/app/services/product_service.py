@@ -142,5 +142,14 @@ class ProductService:
 
     @staticmethod
     def get_categories(db: Session):
-        """Get all categories"""
-        return db.query(Product.category).distinct().all()
+        """Get all categories with at least one active product.
+
+        Same bug class as get_product had before it was fixed: without the
+        is_active filter, a soft-deleted product's category name lingers in
+        this list forever (e.g. a leftover "Teste" category from admin CRUD
+        testing), so the public catalog filter shows a category that always
+        returns zero results.
+        """
+        return db.query(Product.category).filter(
+            Product.is_active == True
+        ).distinct().all()

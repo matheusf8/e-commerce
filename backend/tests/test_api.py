@@ -367,3 +367,31 @@ def test_deleted_product_not_accessible_to_customers(admin_headers, client: Test
     assert reactivate_res.status_code == 200
     assert client.get(f"/api/products/{product_id}").status_code == 200
 
+
+def test_deleted_product_category_not_in_categories_list(admin_headers, client: TestClient):
+    """Regressão: GET /api/products/categories não filtrava is_active, então a
+    categoria de um produto soft-deleted (ex: um produto de teste apagado)
+    continuava aparecendo pra sempre no filtro de categorias do catálogo
+    público, levando a um resultado vazio quando o cliente clicava nela."""
+    unique_category = f"CatTmp-{uuid.uuid4().hex[:8]}"
+    create_res = client.post("/api/products", json={
+        "name": "Produto De Categoria Temporaria",
+        "price": 10.0,
+        "category": unique_category,
+        "stock": 1,
+        "sku": f"CATTMP-{uuid.uuid4()}",
+    }, headers=admin_headers)
+    assert create_res.status_code == 201
+    product_id = create_res.json()["id"]
+
+    # Enquanto ativo, a categoria aparece na lista pública
+    categories_before = client.get("/api/products/categories").json()["categories"]
+    assert unique_category in categories_before
+
+    delete_res = client.delete(f"/api/products/{product_id}", headers=admin_headers)
+    assert delete_res.status_code == 204
+
+    # Depois do soft delete, a categoria não deve mais aparecer
+    categories_after = client.get("/api/products/categories").json()["categories"]
+    assert unique_category not in categories_after
+
