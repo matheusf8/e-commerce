@@ -2,6 +2,12 @@
 
 Um projeto de e-commerce completo, moderno e profissional desenvolvido com **Python + FastAPI** no backend e **React + TypeScript** no frontend.
 
+🌐 **Demo:** https://e-commerce-mauve-iota-29.vercel.app
+
+## 📸 Demonstração
+
+![Home](docs/screenshots/home.jpg)
+
 ## 🚀 Features
 
 - ✅ **Autenticação JWT** com registro, login, refresh token e **redefinição de senha por email**
