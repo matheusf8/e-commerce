@@ -18,7 +18,7 @@ Um projeto de e-commerce completo, moderno e profissional desenvolvido com **Pyt
 - ✅ **Wishlist** e **Avaliações** de produtos
 - ✅ **Dashboard Admin** completo (produtos, categorias, pedidos, status)
 - ✅ **Migrações de banco** com Alembic
-- ✅ **Testes automatizados**: 17 testes de API (Pytest) + suíte E2E completa em navegador real (Playwright)
+- ✅ **Testes automatizados**: 19 testes de API (Pytest) + suíte E2E completa em navegador real (Playwright)
 - ✅ **Responsivo** mobile-first
 - ✅ **Design Premium** com Tailwind CSS
 - ✅ **Type-Safe** com TypeScript e Python type hints
